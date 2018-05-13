@@ -7,14 +7,11 @@ const _       = require('lodash');
 
 let token = fs.readFileSync('./token', { encoding: 'utf-8' });
 let [, userID, playlistID] = process.argv[2].match(/^spotify:user:(.+):playlist:(.+)$/);
-let uri = `https://api.spotify.com/v1/users/${userID}/playlists/${playlistID}/tracks?market=DE&fields=next%2Citems(track(id))&limit=100&offset=0`;
 
-// getTracks(uri, gotTracks);
 
-let tracks = [];
 async.waterfall(
   [
-    async.constant(uri),
+    async.constant(userID, playlistID),
     getTracks,
     getFeatures,
     _.partial(fs.writeFile, `${userID}_${playlistID}.json`)
@@ -26,22 +23,22 @@ async.waterfall(
 
 
 
-function getTracks(uri, callback) {
-  console.log(uri);
-  request.get(uri, {headers: {
-    "Accept": "application/json",
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${token}`
-  }}, (error, response, body) => {
-    if (error) { console.error(error); return; }
-    body = JSON.parse(body);
+function getTracks(userID, playlistID, callback) {
+  let tracks = []
+  let uri = `https://api.spotify.com/v1/users/${userID}/playlists/${playlistID}/tracks?market=DE&fields=next%2Citems(track(id))&limit=100&offset=0`;
+  
+  async.doUntil(
+    cb => getWithAuth(uri, _.partial(handleTrackPage, _, _, cb)),
+    () => _.isUndefined(uri) || _.isNull(uri),
+    callback
+  );
+
+  function handleTrackPage(error, body, cb) {
+    if (error) return cb(error);
     tracks.push(...body.items);
-    if (body.next) {
-      getTracks(body.next, callback);
-    } else {
-      callback(null, tracks);
-    }
-  });
+    uri = body.next;
+    return cb(null, tracks);
+  }
 }
 
 function getFeatures(tracks, callback) {
@@ -71,7 +68,6 @@ function getFeatures(tracks, callback) {
 
   function unchunkFeatures(chunkFeatures) {
     let features = [].concat(...chunkFeatures.map(chunk => chunk.audio_features))
-    console.log(features)
     fs.writeFileSync(`${userID}_${playlistID}.json`, JSON.stringify(features));
   }
 }
@@ -82,9 +78,9 @@ function getWithAuth(uri, callback) {
     "Content-Type": "application/json",
     "Authorization": `Bearer ${token}`
   }}, (error, response, body) => {
-    if (error) { console.error(error); return; }
+    if (error) callback(error);
     body = JSON.parse(body);
-    return callback(null, body);
+    return callback(null, body, response);
   });
 }
 
