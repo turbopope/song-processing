@@ -68,7 +68,7 @@ function getFeatures(tracks, callback) {
 
   function unchunkFeatures(chunkFeatures) {
     let features = [].concat(...chunkFeatures.map(chunk => chunk.audio_features))
-    fs.writeFileSync(`${userID}_${playlistID}.json`, JSON.stringify(features));
+    fs.writeFileSync(`./playlists/${userID}_${playlistID}.json`, JSON.stringify(features));
   }
 }
 
