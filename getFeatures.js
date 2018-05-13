@@ -1,15 +1,17 @@
 const request = require('request');
-const async = require('async');
-const fs = require('fs');
-const _ = require('lodash');
+const async   = require('async');
+const fs      = require('fs');
+const _       = require('lodash');
+
+
 
 const TOKEN = 'BQA0vW0IrH1cVUHpdrpBddipHfTvt7tjxXpgFydRxyHox4lOtq70fY86yhodIQ7Mvyk9PdLx6FFVrjftsWTQ6uXGDh8o3DSqwRctf_gIbsWdaxrrtiuv2qi-aASF6DG0ghS1PRszNkcJupSdUuwixjcWPek';
 const PLAYLIST_ID = '6SqQma7FkgI5ShUXpzZlnH';
 
 let uri = `https://api.spotify.com/v1/users/turbopope/playlists/${PLAYLIST_ID}/tracks?market=DE&fields=next%2Citems(track(id))&limit=100&offset=0`;
-
 let tracks = [];
 getTracks(uri, gotTracks);
+
 
 
 function getTracks(uri, callback) {
