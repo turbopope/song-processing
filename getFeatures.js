@@ -5,6 +5,8 @@ const _       = require('lodash');
 
 
 
+let TRACK_FIELDS = ['id', 'name', 'artists.name', 'album.name', 'popularity', 'duration_ms'].join('%2C');
+let FIELDS = ['next', `items(track(${TRACK_FIELDS}))`].join('%2C');
 let token = fs.readFileSync('./token', { encoding: 'utf-8' });
 let [, userID, playlistID] = process.argv[2].match(/^spotify:user:(.+):playlist:(.+)$/);
 
@@ -14,7 +16,8 @@ async.waterfall(
     async.constant(userID, playlistID),
     getTracks,
     getFeatures,
-    _.partial(fs.writeFile, `${userID}_${playlistID}.json`)
+    cleanUp,
+    writeOut
   ],
   error => {
     if (error) throw error
@@ -22,10 +25,14 @@ async.waterfall(
 )
 
 
+function writeOut(playlist, callback) {
+  return fs.writeFile(`./playlists/${userID}_${playlistID}.json`, JSON.stringify(playlist), callback);
+}
+
 
 function getTracks(userID, playlistID, callback) {
   let tracks = []
-  let uri = `https://api.spotify.com/v1/users/${userID}/playlists/${playlistID}/tracks?market=DE&fields=next%2Citems(track(id))&limit=100&offset=0`;
+  let uri = `https://api.spotify.com/v1/users/${userID}/playlists/${playlistID}/tracks?market=DE&fields=${FIELDS}&limit=100&offset=0`;
   
   async.doUntil(
     cb => getWithAuth(uri, _.partial(handleTrackPage, _, _, cb)),
@@ -60,16 +67,34 @@ function getFeatures(tracks, callback) {
     return async.map(chunks, getFeaturesForChunk, callback);
   }
 
-  function getFeaturesForChunk(chunk, callback) {
-    let ids = chunk.map(item => item.track.id).join('%2C');
+  function getFeaturesForChunk(tracksChunk, callback) {
+    let ids = tracksChunk.map(item => item.track.id).join('%2C');
     let uri = `https://api.spotify.com/v1/audio-features?ids=${ids}`;
-    return getWithAuth(uri, callback);
+    return getWithAuth(uri, (error, featuresChunk) => {
+      if (error) return callback(error);
+      return callback(null, _.zipWith(tracksChunk.map(track => track.track), featuresChunk.audio_features, _.merge))
+    });
   }
 
-  function unchunkFeatures(chunkFeatures) {
-    let features = [].concat(...chunkFeatures.map(chunk => chunk.audio_features))
-    fs.writeFileSync(`./playlists/${userID}_${playlistID}.json`, JSON.stringify(features));
+  function unchunkFeatures(chunkFeatures, callback) {
+    let features = [].concat(...chunkFeatures/*.map(chunk => chunk.audio_features)*/)
+    return callback(null, features)
+    // return fs.writeFile(`./playlists/${userID}_${playlistID}.json`, JSON.stringify(features), callback);
   }
+}
+
+function cleanUp(tracks, callback) {
+
+  tracks.forEach(track => {
+    delete track.type
+    delete track.uri
+    delete track.track_href
+    delete track.analysis_url
+    track.album = track.album.name
+    track.artists = _.map(track.artists, 'name')
+    track.artist = _.first(track.artists)
+  })
+  return callback(null, tracks)
 }
 
 function getWithAuth(uri, callback) {
@@ -78,8 +103,9 @@ function getWithAuth(uri, callback) {
     "Content-Type": "application/json",
     "Authorization": `Bearer ${token}`
   }}, (error, response, body) => {
-    if (error) callback(error);
+    if (error) return callback(error);
     body = JSON.parse(body);
+    if (body.error) return callback(body.error.message)
     return callback(null, body, response);
   });
 }
