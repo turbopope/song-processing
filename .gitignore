@@ -2,3 +2,4 @@ playlists/*
 !playlists/.keep
 node_modules/
 .vscode/
+token
