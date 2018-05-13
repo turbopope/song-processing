@@ -9,7 +9,7 @@ let TRACK_FIELDS = ['id', 'name', 'artists.name', 'album.name', 'popularity', 'd
 let FIELDS = ['next', `items(track(${TRACK_FIELDS}))`].join('%2C');
 let token;
 try {
-  token = fs.readFileSync('./token', { encoding: 'utf-8' });
+  token = fs.readFileSync('./token', { encoding: 'utf-8' }).trim();
 } catch (error) {
   console.error('Create a \'token\' file with the auth token in it!');
   return;
