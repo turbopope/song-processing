@@ -7,7 +7,13 @@ const _       = require('lodash');
 
 let TRACK_FIELDS = ['id', 'name', 'artists.name', 'album.name', 'popularity', 'duration_ms'].join('%2C');
 let FIELDS = ['next', `items(track(${TRACK_FIELDS}))`].join('%2C');
-let token = fs.readFileSync('./token', { encoding: 'utf-8' });
+let token;
+try {
+  token = fs.readFileSync('./token', { encoding: 'utf-8' });
+} catch (error) {
+  console.error('Create a \'token\' file with the auth token in it!');
+  return;
+}
 let [, userID, playlistID] = process.argv[2].match(/^spotify:user:(.+):playlist:(.+)$/);
 
 
