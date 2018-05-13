@@ -5,10 +5,10 @@ const _       = require('lodash');
 
 
 
-const TOKEN = 'BQA0vW0IrH1cVUHpdrpBddipHfTvt7tjxXpgFydRxyHox4lOtq70fY86yhodIQ7Mvyk9PdLx6FFVrjftsWTQ6uXGDh8o3DSqwRctf_gIbsWdaxrrtiuv2qi-aASF6DG0ghS1PRszNkcJupSdUuwixjcWPek';
-const PLAYLIST_ID = '6SqQma7FkgI5ShUXpzZlnH';
+let token = fs.readFileSync('./token', { encoding: 'utf-8' });
+let [, userID, playlistID] = process.argv[2].match(/^spotify:user:(.+):playlist:(.+)$/);
 
-let uri = `https://api.spotify.com/v1/users/turbopope/playlists/${PLAYLIST_ID}/tracks?market=DE&fields=next%2Citems(track(id))&limit=100&offset=0`;
+let uri = `https://api.spotify.com/v1/users/${userID}/playlists/${playlistID}/tracks?market=DE&fields=next%2Citems(track(id))&limit=100&offset=0`;
 let tracks = [];
 getTracks(uri, gotTracks);
 
@@ -19,7 +19,7 @@ function getTracks(uri, callback) {
   request.get(uri, {headers: {
     "Accept": "application/json",
     "Content-Type": "application/json",
-    "Authorization": `Bearer ${TOKEN}`
+    "Authorization": `Bearer ${token}`
   }}, (error, response, body) => {
     if (error) { console.error(error); return; }
     body = JSON.parse(body);
@@ -45,7 +45,7 @@ function getFeatures(chunk, callback) {
   request.get(uri, {headers: {
     "Accept": "application/json",
     "Content-Type": "application/json",
-    "Authorization": `Bearer ${TOKEN}`
+    "Authorization": `Bearer ${token}`
   }}, (error, response, body) => {
     if (error) { console.error(error); return; }
     body = JSON.parse(body);
