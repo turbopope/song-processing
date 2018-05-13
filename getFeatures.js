@@ -56,5 +56,5 @@ function getFeatures(chunk, callback) {
 function gotFeatures(error, chunkFeatures) {
   let features = [].concat(...chunkFeatures.map(chunk => chunk.audio_features))
   console.log(features)
-  fs.writeFileSync('inspiration.json', JSON.stringify(features));
+  fs.writeFileSync(`${userID}_${playlistID}.json`, JSON.stringify(features));
 }
