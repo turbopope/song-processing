@@ -17,6 +17,9 @@ pprint('Columns', playlist.columns)
 
 pprint('Most Frequent Artists', playlist.groupby(playlist.artist).size().sort_values(ascending=False).head())
 
-pprint('Most Popular Tracks', playlist.sort_values(by='popularity', ascending=False).iloc[0:10][['popularity', 'artist', 'name']])
 
-pprint('Least Popular Tracks', playlist.sort_values(by='popularity').iloc[0:10][['popularity', 'artist', 'name']])
+pprint('Track Popularity',    playlist.sort_values(by='popularity',   ascending=False)[['popularity',   'artist', 'name']])
+pprint('Track Energy',        playlist.sort_values(by='energy',       ascending=False)[['energy',       'artist', 'name']])
+pprint('Track Tempo',         playlist.sort_values(by='tempo',        ascending=False)[['tempo',        'artist', 'name']])
+pprint('Track Danceability',  playlist.sort_values(by='danceability', ascending=False)[['danceability', 'artist', 'name']])
+pprint('Track Valence',       playlist.sort_values(by='valence',      ascending=False)[['valence',      'artist', 'name']])
