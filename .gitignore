@@ -3,3 +3,4 @@ playlists/*
 node_modules/
 .vscode/
 token
+__pycache__/
