@@ -16,3 +16,6 @@ plt.show()
 
 sns.lmplot(x="energy", y="popularity", truncate=True, size=8, data=playlist)
 plt.show()
+
+sns.lmplot(x="valence", y="popularity", truncate=True, size=8, data=playlist)
+plt.show()
