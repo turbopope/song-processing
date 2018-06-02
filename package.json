@@ -11,6 +11,7 @@
   "dependencies": {
     "async": "^2.6.0",
     "lodash": "^4.17.5",
+    "lyric-get": "^1.0.3",
     "request": "^2.85.0"
   }
 }

@@ -1,7 +1,8 @@
-const request = require('request');
-const async   = require('async');
-const fs      = require('fs');
-const _       = require('lodash');
+const request   = require('request');
+const async     = require('async');
+const fs        = require('fs');
+const _         = require('lodash');
+const lyricsAPI = require('lyric-get');
 
 
 
@@ -23,6 +24,7 @@ async.waterfall(
     getTracks,
     getFeatures,
     cleanUp,
+    getLyrics,
     writeOut
   ],
   error => {
@@ -86,6 +88,18 @@ function getFeatures(tracks, callback) {
     let features = [].concat(...chunkFeatures/*.map(chunk => chunk.audio_features)*/)
     return callback(null, features)
     // return fs.writeFile(`./playlists/${userID}_${playlistID}.json`, JSON.stringify(features), callback);
+  }
+}
+
+function getLyrics(tracks, callback) {
+  return async.mapLimit(tracks, 4, getTrackLyrics, callback);
+
+  function getTrackLyrics(track, cb) {
+    lyricsAPI.get(track.artist, track.name, (err, res) => {
+      // if (err && err !== 'not found') throw err;
+      track.lyrics = (res||'').trim().replace(/(?:\r\n|\r|\n)+/g, ' ');
+      cb(null, track);
+    })
   }
 }
 
